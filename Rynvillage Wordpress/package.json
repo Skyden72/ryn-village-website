@@ -1,0 +1,22 @@
+{
+    "name": "rynvillage",
+    "title": "Ryn Village",
+    "description": "Premium retirement estate theme with modern design and elegant animations.",
+    "version": "1.0.0",
+    "author": "Digital Fold",
+    "license": "GPL-2.0-or-later",
+    "keywords": [
+        "retirement",
+        "estate",
+        "life-rights",
+        "premium"
+    ],
+    "homepage": "https://rynvillage.co.za",
+    "repository": {
+        "type": "git",
+        "url": ""
+    },
+    "scripts": {
+        "dev": "echo 'No build required - vanilla CSS/JS theme'"
+    }
+}

@@ -1,0 +1,527 @@
+/* ==========================================================================
+   Component Styles
+   Ryn Village WordPress Theme
+   ========================================================================== */
+
+/* ==========================================================================
+   Navigation
+   ========================================================================== */
+.main-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.main-nav.nav-scrolled {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-lg);
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 5rem;
+}
+
+.nav-logo-text {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    transition: color 0.3s ease;
+}
+
+.nav-scrolled .nav-logo-text {
+    color: var(--color-secondary);
+}
+
+.nav-menu-desktop {
+    display: none;
+    align-items: center;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .nav-menu-desktop {
+        display: flex;
+    }
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
+}
+
+.nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--color-primary);
+}
+
+.nav-scrolled .nav-link {
+    color: var(--color-text);
+}
+
+.nav-cta {
+    padding: 0.625rem 1.5rem;
+}
+
+/* Mobile Navigation */
+.nav-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+@media (min-width: 768px) {
+    .nav-toggle {
+        display: none;
+    }
+}
+
+.nav-toggle-icon,
+.nav-toggle-icon::before,
+.nav-toggle-icon::after {
+    width: 1.5rem;
+    height: 2px;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.nav-scrolled .nav-toggle-icon,
+.nav-scrolled .nav-toggle-icon::before,
+.nav-scrolled .nav-toggle-icon::after {
+    background-color: var(--color-text);
+}
+
+.nav-toggle-icon {
+    position: relative;
+}
+
+.nav-toggle-icon::before,
+.nav-toggle-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+}
+
+.nav-toggle-icon::before {
+    top: -6px;
+}
+
+.nav-toggle-icon::after {
+    top: 6px;
+}
+
+.nav-toggle.is-active .nav-toggle-icon {
+    background-color: transparent;
+}
+
+.nav-toggle.is-active .nav-toggle-icon::before {
+    transform: rotate(45deg);
+    top: 0;
+}
+
+.nav-toggle.is-active .nav-toggle-icon::after {
+    transform: rotate(-45deg);
+    top: 0;
+}
+
+.nav-menu-mobile {
+    display: none;
+    background-color: white;
+    box-shadow: var(--shadow-xl);
+}
+
+.nav-menu-mobile.is-open {
+    display: block;
+}
+
+.nav-menu-mobile-list {
+    list-style: none;
+    margin: 0;
+    padding: var(--spacing-md);
+}
+
+.nav-menu-mobile-list li {
+    margin-bottom: var(--spacing-sm);
+}
+
+.nav-menu-mobile-list a {
+    display: block;
+    padding: var(--spacing-xs) 0;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.nav-cta-mobile {
+    display: block;
+    margin: var(--spacing-md);
+    text-align: center;
+}
+
+/* ==========================================================================
+   Hero Section
+   ========================================================================== */
+.hero-section {
+    position: relative;
+    height: 100vh;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-image {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.1s ease-out;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
+}
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    color: white;
+    max-width: 64rem;
+    padding: 0 var(--spacing-md);
+}
+
+.hero-title {
+    font-size: 3rem;
+    line-height: 1.1;
+    margin-bottom: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+    .hero-title {
+        font-size: 4.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .hero-title {
+        font-size: 6rem;
+    }
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 32rem;
+    margin: 0 auto var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+    .hero-subtitle {
+        font-size: 1.5rem;
+    }
+}
+
+.hero-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+@media (min-width: 640px) {
+    .hero-buttons {
+        flex-direction: row;
+    }
+}
+
+.hero-buttons .btn {
+    padding: 1rem 2rem;
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    color: rgba(255, 255, 255, 0.7);
+    animation: bounce 1.5s infinite;
+}
+
+.scroll-arrow {
+    width: 2rem;
+    height: 2rem;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(10px);
+    }
+}
+
+/* ==========================================================================
+   Sections
+   ========================================================================== */
+.section-cream {
+    background-color: var(--color-bg-cream);
+}
+
+.section-dark {
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.section-header-light .section-title,
+.section-header-light .section-subtitle {
+    color: white;
+}
+
+.section-header-light .section-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.section-title {
+    font-size: 2.5rem;
+    color: var(--color-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+@media (min-width: 768px) {
+    .section-title {
+        font-size: 3rem;
+    }
+}
+
+.section-subtitle {
+    font-size: 1.125rem;
+    color: var(--color-text-muted);
+    max-width: 42rem;
+    margin: 0 auto;
+}
+
+.section-label {
+    display: inline-block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.section-title-left {
+    font-size: 2.5rem;
+    color: var(--color-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+    .section-title-left {
+        font-size: 3rem;
+    }
+}
+
+/* ==========================================================================
+   Amenities Grid
+   ========================================================================== */
+.amenities-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+    .amenities-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .amenities-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.amenity-card {
+    position: relative;
+    background-color: white;
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.amenity-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.amenity-icon {
+    width: 4rem;
+    height: 4rem;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+    background: linear-gradient(135deg, #10b981, #14b8a6);
+}
+
+.amenity-card[data-color="indigo"] .amenity-icon {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+}
+
+.amenity-card[data-color="rose"] .amenity-icon {
+    background: linear-gradient(135deg, #f43f5e, #ec4899);
+}
+
+.amenity-card[data-color="amber"] .amenity-icon {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.amenity-card[data-color="cyan"] .amenity-icon {
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+
+.amenity-card[data-color="green"] .amenity-icon {
+    background: linear-gradient(135deg, #22c55e, #10b981);
+}
+
+.amenity-icon svg {
+    width: 2rem;
+    height: 2rem;
+    color: white;
+}
+
+.amenity-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
+}
+
+.amenity-description {
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* Hover state - gradient background */
+.amenity-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+}
+
+.amenity-card[data-color="emerald"]::before {
+    background: linear-gradient(135deg, #10b981, #14b8a6);
+}
+
+.amenity-card[data-color="indigo"]::before {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+}
+
+.amenity-card[data-color="rose"]::before {
+    background: linear-gradient(135deg, #f43f5e, #ec4899);
+}
+
+.amenity-card[data-color="amber"]::before {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.amenity-card[data-color="cyan"]::before {
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+
+.amenity-card[data-color="green"]::before {
+    background: linear-gradient(135deg, #22c55e, #10b981);
+}
+
+.amenity-card:hover::before {
+    opacity: 1;
+}
+
+.amenity-card:hover .amenity-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.amenity-card:hover .amenity-title,
+.amenity-card:hover .amenity-description {
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+.amenity-card:hover .amenity-icon {
+    position: relative;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   Animation Classes
+   ========================================================================== */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ==========================================================================
+   Continue with more component styles...
+   ========================================================================== */
