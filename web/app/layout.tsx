@@ -18,6 +18,10 @@ export const metadata: Metadata = {
     title: 'Ryn Village | Retirement Estate | Welcome To Your Dream Retirement',
     description: 'Enjoy a worry-free retirement lifestyle at Ryn Village. Life rights offer affordable entry and low levies for premium retirement living.',
     keywords: ['retirement estate', 'life rights', 'retirement village', 'South Africa', 'frail care'],
+    icons: {
+        icon: '/favicon.png',
+        apple: '/favicon.png',
+    },
     openGraph: {
         title: 'Ryn Village | Retirement Estate',
         description: 'Experience retirement in luxury without the luxury of high costs.',
