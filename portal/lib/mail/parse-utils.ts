@@ -59,3 +59,33 @@ export async function parseSendGridRequest(formData: FormData): Promise<ParsedEm
         attachments
     };
 }
+
+/**
+ * Extracts text content from a PDF buffer
+ */
+export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
+    try {
+        // pdf-parse is a CommonJS module
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const pdf = require('pdf-parse');
+        const data = await pdf(buffer);
+        return data.text;
+    } catch (error) {
+        console.error('Error parsing PDF:', error);
+        return '';
+    }
+}
+
+/**
+ * Extracts Unit Number from text (e.g. "RV025" -> "25", "RV105" -> "105")
+ * Returns the CLEAN unit number (no RV prefix, no leading zeros)
+ */
+export function extractUnitNumber(text: string): string | null {
+    // Look for pattern: RV followed by optional zeros and 1-3 digits
+    // e.g. RV025, RV25, RV001
+    const match = text.match(/RV0*(\d{1,3})/i);
+    if (match && match[1]) {
+        return match[1];
+    }
+    return null;
+}
