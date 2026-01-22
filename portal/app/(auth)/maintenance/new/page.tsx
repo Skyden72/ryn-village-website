@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { submitMaintenanceRequest } from '../actions'
 
 const categories = [
     'Plumbing',
@@ -25,14 +26,30 @@ export default function NewMaintenancePage() {
         priority: 'normal',
     })
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSubmit = async (formData: FormData) => {
         setLoading(true)
 
-        // TODO: Submit to Supabase
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Append form state to FormData if not using native form action
+        // Actually, we can use the server action directly in the form 'action' prop, 
+        // but we want to show loading state. 
+        // Let's wrap it.
 
-        router.push('/maintenance')
+        try {
+            const result = await submitMaintenanceRequest(formData)
+
+            if (result?.error) {
+                alert(result.error) // Simple alert for now, could be better UI
+                setLoading(false)
+                return
+            }
+
+            // Success
+            router.push('/maintenance')
+        } catch (e) {
+            console.error(e)
+            alert('Something went wrong')
+            setLoading(false)
+        }
     }
 
     return (
@@ -51,7 +68,7 @@ export default function NewMaintenancePage() {
                     New Maintenance Request
                 </h1>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form action={handleSubmit} className="space-y-6">
                     {/* Title */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -59,6 +76,7 @@ export default function NewMaintenancePage() {
                         </label>
                         <input
                             type="text"
+                            name="title"
                             value={form.title}
                             onChange={(e) => setForm({ ...form, title: e.target.value })}
                             placeholder="e.g., Leaking tap in kitchen"
@@ -73,6 +91,7 @@ export default function NewMaintenancePage() {
                             Category *
                         </label>
                         <select
+                            name="category"
                             value={form.category}
                             onChange={(e) => setForm({ ...form, category: e.target.value })}
                             required
@@ -91,6 +110,7 @@ export default function NewMaintenancePage() {
                             Describe the issue
                         </label>
                         <textarea
+                            name="description"
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
                             placeholder="Please provide as much detail as possible..."

@@ -29,6 +29,30 @@ export default async function DashboardPage() {
                 <p className="text-slate-600 mt-1">
                     {user?.email}
                 </p>
+
+                {/* Admin Link */}
+                {await (async () => {
+                    const { data: isAdmin } = await supabase
+                        .from('admins')
+                        .select('role')
+                        .eq('id', user?.id)
+                        .single()
+
+                    if (isAdmin) {
+                        return (
+                            <div className="mt-4">
+                                <Link
+                                    href="/admin"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium"
+                                >
+                                    <Wrench className="w-4 h-4" />
+                                    Access Admin Panel
+                                </Link>
+                            </div>
+                        )
+                    }
+                    return null
+                })()}
             </div>
 
             {/* Quick Stats */}

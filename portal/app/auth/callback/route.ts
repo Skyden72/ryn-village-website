@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -7,13 +8,40 @@ export async function GET(request: Request) {
     const next = searchParams.get('next') ?? '/dashboard'
 
     if (code) {
-        const supabase = await createClient()
+        const cookieStore = await cookies()
+
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll()
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) => {
+                            cookieStore.set(name, value, {
+                                ...options,
+                                // Ensure cookies work on Vercel
+                                sameSite: 'lax',
+                                secure: true,
+                            })
+                        })
+                    },
+                },
+            }
+        )
+
         const { error } = await supabase.auth.exchangeCodeForSession(code)
+
         if (!error) {
-            return NextResponse.redirect(`${origin}${next}`)
+            // Use 302 redirect with explicit URL
+            const redirectUrl = new URL(next, origin)
+            return NextResponse.redirect(redirectUrl.toString(), { status: 302 })
         }
+
+        console.error('Auth error:', error.message)
     }
 
-    // Return to login with error if something went wrong
     return NextResponse.redirect(`${origin}/login?error=Could not authenticate`)
 }
