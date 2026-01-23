@@ -13,7 +13,8 @@ import {
     LogOut,
     Menu,
     X,
-    Shield
+    Shield,
+    Upload
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -22,6 +23,7 @@ const navItems = [
     { label: 'Residents', href: '/admin/residents', icon: Users },
     { label: 'Announcements', href: '/admin/announcements', icon: Megaphone },
     { label: 'Bills', href: '/admin/bills', icon: Receipt },
+    { label: 'Import', href: '/admin/invoices', icon: Upload },
     { label: 'Maintenance', href: '/admin/maintenance', icon: Wrench },
 ]
 
@@ -61,8 +63,8 @@ export default function AdminSidebar() {
                             href={item.href}
                             onClick={() => setMobileOpen(false)}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                                    ? 'bg-amber-500 text-white shadow-lg'
-                                    : 'text-slate-300 hover:bg-slate-700'
+                                ? 'bg-amber-500 text-white shadow-lg'
+                                : 'text-slate-300 hover:bg-slate-700'
                                 }`}
                         >
                             <Icon className="w-5 h-5" />

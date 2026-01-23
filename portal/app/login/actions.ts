@@ -68,14 +68,29 @@ export async function signup(formData: FormData) {
         return { error: error.message }
     }
 
-    // Auto-create resident profile with placeholders
-    // User can complete their profile later
+    // Link to existing resident record if available, otherwise create new
     if (data.user) {
-        await supabase.from('residents').insert({
-            id: data.user.id,
-            unit_number: 'PENDING',
-            full_name: email.split('@')[0], // Use email prefix as temporary name
-        })
+        const { data: existing } = await supabase
+            .from('residents')
+            .select('id')
+            .eq('email', email)
+            .single()
+
+        if (existing) {
+            // Link existing record
+            await supabase
+                .from('residents')
+                .update({ user_id: data.user.id })
+                .eq('id', existing.id)
+        } else {
+            // Create new placeholder record
+            await supabase.from('residents').insert({
+                user_id: data.user.id,
+                unit_number: 'PENDING',
+                full_name: email.split('@')[0],
+                email: email
+            })
+        }
     }
 
     // If email confirmation is off, this will log them in correctly.

@@ -1,137 +1,87 @@
-import { Receipt, Download, CheckCircle, Clock } from 'lucide-react'
+import { Receipt, Clock } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import ResidentBillsList from '@/components/ResidentBillsList'
 
-// TODO: Fetch from Supabase
-const bills = [
-    {
-        id: '1',
-        month: 'January 2026',
-        amount: 2450.00,
-        paid: false,
-        pdfUrl: '/bills/january-2026.pdf',
-        dueDate: '2026-01-31'
-    },
-    {
-        id: '2',
-        month: 'December 2025',
-        amount: 2380.00,
-        paid: true,
-        pdfUrl: '/bills/december-2025.pdf',
-        dueDate: '2025-12-31'
-    },
-    {
-        id: '3',
-        month: 'November 2025',
-        amount: 2380.00,
-        paid: true,
-        pdfUrl: '/bills/november-2025.pdf',
-        dueDate: '2025-11-30'
-    },
-    {
-        id: '4',
-        month: 'October 2025',
-        amount: 2350.00,
-        paid: true,
-        pdfUrl: '/bills/october-2025.pdf',
-        dueDate: '2025-10-31'
-    },
-]
+export default async function BillsPage() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-export default function BillsPage() {
+    if (!user) return null
+
+    // 1. Fetch Resident ID
+    const { data: resident } = await supabase
+        .from('residents')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+    // 2. Fetch Bills
+    const { data: bills, error } = await supabase
+        .from('bills')
+        .select('id, month, amount, is_paid, pdf_url, page_number, invoice_number')
+        .eq('resident_id', resident?.id)
+        .order('month', { ascending: false })
+
+    if (error) {
+        return (
+            <div className="p-8 text-red-600 bg-red-50 rounded-xl border border-red-100 italic">
+                Error loading statements: {error.message}
+            </div>
+        )
+    }
+
     const totalOutstanding = bills
-        .filter(b => !b.paid)
-        .reduce((sum, b) => sum + b.amount, 0)
+        ?.filter(b => !b.is_paid)
+        .reduce((sum, b) => sum + b.amount, 0) || 0
 
     return (
         <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-                <h1 className="text-3xl font-serif font-bold text-slate-800">
-                    My Bills
+            <div className="mb-10">
+                <h1 className="text-4xl font-serif font-bold text-slate-900">
+                    My Statements
                 </h1>
-                <p className="text-slate-600 mt-1">
-                    View and download your monthly statements
+                <p className="text-slate-500 mt-2 text-lg">
+                    Manage your levy account and view payment history
                 </p>
             </div>
 
             {/* Outstanding Balance Card */}
             {totalOutstanding > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6">
-                    <div className="flex items-center justify-between">
+                <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-8 mb-8 text-white shadow-xl shadow-amber-500/20 relative overflow-hidden">
+                    <div className="relative z-10 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-amber-800">Outstanding Balance</p>
-                            <p className="text-3xl font-bold text-amber-900 mt-1">
+                            <p className="text-amber-100 font-medium mb-1 uppercase tracking-wider text-xs">Total Outstanding</p>
+                            <p className="text-4xl font-bold">
                                 R {totalOutstanding.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
                             </p>
                         </div>
-                        <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                            <Clock className="w-6 h-6 text-amber-600" />
+                        <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                            <Clock className="w-8 h-8 text-white" />
                         </div>
                     </div>
+                    <Receipt className="absolute -bottom-8 -right-8 w-40 h-40 text-white/10 -rotate-12" />
                 </div>
             )}
 
             {/* Bills List */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100">
-                <div className="p-6 border-b border-slate-100">
-                    <h2 className="text-lg font-semibold text-slate-800">Statement History</h2>
-                </div>
-                <div className="divide-y divide-slate-100">
-                    {bills.map((bill) => (
-                        <div
-                            key={bill.id}
-                            className="p-6 flex items-center justify-between"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${bill.paid ? 'bg-emerald-100' : 'bg-amber-100'
-                                    }`}>
-                                    <Receipt className={`w-5 h-5 ${bill.paid ? 'text-emerald-600' : 'text-amber-600'
-                                        }`} />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-slate-800">{bill.month}</p>
-                                    <p className="text-sm text-slate-500">Due: {bill.dueDate}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-6">
-                                <div className="text-right">
-                                    <p className="font-semibold text-slate-800">
-                                        R {bill.amount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
-                                    </p>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        {bill.paid ? (
-                                            <>
-                                                <CheckCircle className="w-4 h-4 text-emerald-500" />
-                                                <span className="text-xs text-emerald-600 font-medium">Paid</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Clock className="w-4 h-4 text-amber-500" />
-                                                <span className="text-xs text-amber-600 font-medium">Pending</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                                <a
-                                    href={bill.pdfUrl}
-                                    download
-                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                    title="Download PDF"
-                                >
-                                    <Download className="w-5 h-5" />
-                                </a>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <ResidentBillsList bills={bills || []} />
 
             {/* Help Text */}
-            <p className="text-sm text-slate-500 mt-6 text-center">
-                For payment queries, contact the office at{' '}
-                <a href="tel:+27123456789" className="text-amber-600 hover:underline">
-                    (012) 345-6789
-                </a>
-            </p>
+            <div className="mt-12 bg-slate-50 rounded-2xl p-8 border border-slate-100 text-center">
+                <h4 className="font-bold text-slate-800 mb-2">Need Assistance?</h4>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">
+                    If you have any questions regarding your statement or would like to discuss payment arrangements, please contact the Ryn Village office.
+                </p>
+                <div className="mt-4 flex items-center justify-center gap-6">
+                    <a href="tel:+27123456789" className="text-amber-600 font-bold hover:underline">
+                        (012) 345-6789
+                    </a>
+                    <div className="w-1 h-1 bg-slate-300 rounded-full" />
+                    <a href="mailto:office@rynvillage.co.za" className="text-amber-600 font-bold hover:underline">
+                        office@rynvillage.co.za
+                    </a>
+                </div>
+            </div>
         </div>
     )
 }

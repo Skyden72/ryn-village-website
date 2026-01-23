@@ -39,13 +39,14 @@ export async function updateSession(request: NextRequest) {
         const { data: { user } } = await supabase.auth.getUser()
 
         // Public routes - no auth required
-        const publicRoutes = ['/login', '/auth']
+        const publicRoutes = ['/login', '/auth', '/admin/login']
         const isPublicRoute = publicRoutes.some(route =>
             request.nextUrl.pathname.startsWith(route)
         )
 
         if (isPublicRoute) {
-            // If user is logged in and tries to access login, redirect to dashboard
+            // If user is logged in and tries to access resident login, redirect to dashboard
+            // Note: /admin/login has its own logic - admins who are logged in can still access it
             if (user && request.nextUrl.pathname === '/login') {
                 const url = request.nextUrl.clone()
                 url.pathname = '/dashboard'
@@ -57,7 +58,12 @@ export async function updateSession(request: NextRequest) {
         // Protected routes - require auth
         if (!user) {
             const url = request.nextUrl.clone()
-            url.pathname = '/login'
+            // Redirect to admin login for admin routes, otherwise resident login
+            if (request.nextUrl.pathname.startsWith('/admin')) {
+                url.pathname = '/admin/login'
+            } else {
+                url.pathname = '/login'
+            }
             return NextResponse.redirect(url)
         }
 
