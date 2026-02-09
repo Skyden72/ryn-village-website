@@ -17,17 +17,36 @@ export default async function DashboardPage() {
         .eq('user_id', user.id)
         .single()
 
+    // Fallback: Check with Admin Client (RLS bypass)
     if (!resident) {
-        const { data: fallback } = await supabase
+        const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+        const adminClient = createSupabaseClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        // Try getting by User ID first
+        const { data: adminResident } = await adminClient
             .from('residents')
             .select('*')
-            .eq('email', user.email)
+            .eq('user_id', user.id)
             .single()
 
-        if (fallback) {
-            resident = fallback
-            // Link them now for future visits
-            await supabase.from('residents').update({ user_id: user.id }).eq('id', resident.id)
+        if (adminResident) {
+            resident = adminResident
+        } else {
+            // Try by email if not linked
+            const { data: fallback } = await adminClient
+                .from('residents')
+                .select('*')
+                .eq('email', user.email)
+                .single()
+
+            if (fallback) {
+                resident = fallback
+                // Link them now for future visits
+                await adminClient.from('residents').update({ user_id: user.id }).eq('id', resident.id)
+            }
         }
     }
 

@@ -10,6 +10,8 @@ export default function ClaimProfilePage() {
     // Steps: 'identify' -> 'verify' -> 'success'
     const [step, setStep] = useState<'identify' | 'verify'>('identify')
     const [email, setEmail] = useState('')
+    const [unitNumber, setUnitNumber] = useState('')
+    const [showUnit, setShowUnit] = useState(false)
     const [password, setPassword] = useState('')
     const [otp, setOtp] = useState('')
     const [loading, setLoading] = useState(false)
@@ -23,11 +25,14 @@ export default function ClaimProfilePage() {
         setLoading(true)
         setError('')
 
-        const result = await sendClaimOTP(email)
+        const result = await sendClaimOTP(email, unitNumber)
 
         if (result.error) {
             setError(result.error)
             setLoading(false)
+            if (result.requiresUnit) {
+                setShowUnit(true)
+            }
             return
         }
 
@@ -43,7 +48,7 @@ export default function ClaimProfilePage() {
         setLoading(true)
         setError('')
 
-        const result = await verifyAndClaimProfile(email, otp, password)
+        const result = await verifyAndClaimProfile(email, otp, password, unitNumber)
 
         if (result.error) {
             setError(result.error)
@@ -90,6 +95,27 @@ export default function ClaimProfilePage() {
                                 required
                             />
                         </div>
+
+                        {showUnit && (
+                            <div className="animate-in fade-in slide-in-from-top-2">
+                                <label className="block text-sm font-medium text-slate-400 mb-1">
+                                    Unit Number
+                                </label>
+                                <input
+                                    type="text"
+                                    value={unitNumber}
+                                    onChange={(e) => setUnitNumber(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
+                                    placeholder="e.g. RV025"
+                                    required
+                                    autoFocus
+                                />
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Since multiple profiles use this email, please confirm your unit number.
+                                </p>
+                            </div>
+                        )}
+
                         <button
                             type="submit"
                             disabled={loading}

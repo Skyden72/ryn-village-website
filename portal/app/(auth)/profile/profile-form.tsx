@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import { User, Phone, Home, AlertCircle, Loader2, CheckCircle } from 'lucide-react'
 import { updateProfile } from './actions'

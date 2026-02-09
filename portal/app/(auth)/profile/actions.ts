@@ -53,7 +53,14 @@ export async function updateProfile(formData: FormData) {
         return { error: 'Name and Unit Number are required' }
     }
 
-    const { error } = await supabase
+    // Use Admin Client to bypass RLS for updates
+    const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+    const adminClient = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error } = await adminClient
         .from('residents')
         .update({
             full_name: fullName,

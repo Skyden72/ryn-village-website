@@ -27,9 +27,7 @@ export async function POST(request: NextRequest) {
                 const { error: uploadError } = await supabaseAdmin
                     .storage
                     .from('admin-uploads')
-                    .upload({
-                        path,
-                        data: attachment.content,
+                    .upload(path, attachment.content, {
                         contentType: 'application/pdf',
                         upsert: false
                     })

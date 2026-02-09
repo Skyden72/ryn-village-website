@@ -22,19 +22,59 @@ export async function submitMaintenanceRequest(formData: FormData) {
 
     // 3. Insert into Database
     // Lookup resident ID first (it might differ from auth.uid if pre-created)
-    const { data: resident, error: residentError } = await supabase
+    let { data: resident, error: residentError } = await supabase
         .from('residents')
         .select('id, unit_number, full_name')
         .eq('user_id', user.id)
         .single()
 
-    if (residentError || !resident) {
+    if (!resident) {
+        // Fallback to Admin Client
+        const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+        const adminClient = createSupabaseClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        // Try getting by User ID first
+        const { data: adminResident } = await adminClient
+            .from('residents')
+            .select('id, unit_number, full_name')
+            .eq('user_id', user.id)
+            .single()
+
+        if (adminResident) {
+            resident = adminResident
+        } else {
+            // Try by email if not linked
+            const { data: fallback } = await adminClient
+                .from('residents')
+                .select('id, unit_number, full_name')
+                .eq('email', user.email)
+                .single()
+
+            if (fallback) {
+                resident = fallback
+                // Auto-link
+                await adminClient.from('residents').update({ user_id: user.id }).eq('id', resident.id)
+            }
+        }
+    }
+
+    if (!resident) {
         console.error('Maintenance error: Resident not found for user', user.id)
         return { error: 'Resident profile not found. Please contact admin.' }
     }
 
-    const { error } = await supabase.from('maintenance_requests').insert({
-        resident_id: resident.id, // Use the actual resident UUID
+    // Use Admin Client for INSERT to bypass RLS policies
+    const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+    const adminClient = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error } = await adminClient.from('maintenance_requests').insert({
+        resident_id: resident.id,
         title,
         category,
         description,

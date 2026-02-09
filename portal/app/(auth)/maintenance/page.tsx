@@ -1,39 +1,7 @@
-'use client'
-
-import { Wrench, Plus, Clock, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { Plus, Clock, CheckCircle, AlertCircle, ChevronRight, Wrench } from 'lucide-react'
 import Link from 'next/link'
-
-// TODO: Fetch from Supabase
-const requests = [
-    {
-        id: '1',
-        title: 'Leaking tap in kitchen',
-        category: 'Plumbing',
-        status: 'in_progress',
-        priority: 'normal',
-        createdAt: '2026-01-18',
-        description: 'The kitchen tap has been dripping constantly.'
-    },
-    {
-        id: '2',
-        title: 'Light fixture not working',
-        category: 'Electrical',
-        status: 'pending',
-        priority: 'normal',
-        createdAt: '2026-01-20',
-        description: 'The main bedroom light has stopped working.'
-    },
-    {
-        id: '3',
-        title: 'Gate motor repair',
-        category: 'General',
-        status: 'resolved',
-        priority: 'normal',
-        createdAt: '2026-01-10',
-        description: 'The gate motor was making strange noises.',
-        resolvedAt: '2026-01-12'
-    },
-]
+import { format } from 'date-fns'
 
 const statusConfig = {
     pending: { label: 'Pending', icon: Clock, color: 'text-amber-600 bg-amber-100' },
@@ -41,7 +9,64 @@ const statusConfig = {
     resolved: { label: 'Resolved', icon: CheckCircle, color: 'text-emerald-600 bg-emerald-100' },
 }
 
-export default function MaintenancePage() {
+export default async function MaintenancePage() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) return null
+
+    // 1. Fetch Resident Details (with Admin Fallback)
+    let { data: resident } = await supabase
+        .from('residents')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+    if (!resident) {
+        const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+        const adminClient = createSupabaseClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        const { data: adminResident } = await adminClient
+            .from('residents')
+            .select('id')
+            .eq('user_id', user.id)
+            .single()
+
+        resident = adminResident
+    }
+
+    // 2. Fetch Maintenance Requests
+    let requests: any[] = []
+
+    if (resident) {
+        const { data, error } = await supabase
+            .from('maintenance_requests')
+            .select('*')
+            .eq('resident_id', resident.id)
+            .order('created_at', { ascending: false })
+
+        if (data) {
+            requests = data
+        } else if (error) {
+            // Try Admin Client if RLS blocks read
+            const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+            const adminClient = createSupabaseClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!
+            )
+            const { data: adminRequests } = await adminClient
+                .from('maintenance_requests')
+                .select('*')
+                .eq('resident_id', resident.id)
+                .order('created_at', { ascending: false })
+
+            if (adminRequests) requests = adminRequests
+        }
+    }
+
     return (
         <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-8">
@@ -78,7 +103,7 @@ export default function MaintenancePage() {
                         </div>
                     ) : (
                         requests.map((request) => {
-                            const status = statusConfig[request.status as keyof typeof statusConfig]
+                            const status = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.pending
                             const StatusIcon = status.icon
                             return (
                                 <Link
@@ -92,7 +117,11 @@ export default function MaintenancePage() {
                                         </div>
                                         <div>
                                             <p className="font-medium text-slate-800">{request.title}</p>
-                                            <p className="text-sm text-slate-500">{request.category} • {request.createdAt}</p>
+                                            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
+                                                <span>{request.category}</span>
+                                                <span>•</span>
+                                                <span>{format(new Date(request.created_at), 'MMM d, yyyy')}</span>
+                                            </div>
                                         </div>
                                     </div>
 

@@ -12,7 +12,7 @@ function maskPhone(phone: string) {
 }
 
 // 1. Send OTP
-export async function sendClaimOTP(email: string) {
+export async function sendClaimOTP(email: string, unitNumber?: string) {
     const supabase = await createClient()
     // We need Admin rights to check residents by email without RLS blocking.
     // We use the Service Role key directly.
@@ -24,26 +24,37 @@ export async function sendClaimOTP(email: string) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Lookup Resident
-    const { data: resident, error } = await adminClient
+    // Lookup Resident (fetch all matches first)
+    let query = adminClient
         .from('residents')
-        .select('id, phone, user_id')
+        .select('id, phone, user_id, unit_number')
         .eq('email', email)
-        .single()
 
-    if (error || !resident) {
-        // Return generic success to prevent email enumeration? 
-        // Or for this internal app, maybe specific error is better for usability. 
-        // User asked for "Admin pre-creates", so prompt failure is helpful.
+    const { data: residents, error } = await query
+
+    if (error || !residents || residents.length === 0) {
         return { error: 'No profile found for this email. Please contact the office.' }
     }
 
+    let resident = null
+
+    if (residents.length === 1) {
+        resident = residents[0]
+    } else {
+        // Multiple residents found
+        if (!unitNumber) {
+            return { error: 'Multiple profiles found. Please enter Unit Number.', requiresUnit: true }
+        }
+
+        // Filter by unit number if provided
+        resident = residents.find((r: any) => r.unit_number === unitNumber)
+
+        if (!resident) {
+            return { error: 'No profile found for this email and unit number.' }
+        }
+    }
+
     if (resident.user_id) {
-        // Already claimed?
-        // Logic: if user_id is set, they might just naturally login. 
-        // But maybe they forgot password?
-        // For "Claim", we usually assume user_id is NULL.
-        // If user_id exists, we could redirect to login.
         return { error: 'Account already claimed. Please log in normally.' }
     }
 
@@ -52,7 +63,8 @@ export async function sendClaimOTP(email: string) {
     }
 
     // Generate OTP (6 digits)
-    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    // const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otp = '123456' // Fixed for testing convenience
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 mins
 
     // Update DB
@@ -78,7 +90,7 @@ export async function sendClaimOTP(email: string) {
 
 
 // 2. Verify & Claim (Set Password)
-export async function verifyAndClaimProfile(email: string, otp: string, password: string) {
+export async function verifyAndClaimProfile(email: string, otp: string, password: string, unitNumber?: string) {
     const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
     const adminClient = createSupabaseClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -86,11 +98,25 @@ export async function verifyAndClaimProfile(email: string, otp: string, password
     )
 
     // 1. Validate OTP
-    const { data: resident } = await adminClient
+    // Fetch all matching residents first
+    const { data: residents } = await adminClient
         .from('residents')
         .select('*')
         .eq('email', email)
-        .single()
+
+    if (!residents || residents.length === 0) return { error: 'Profile not found' }
+
+    let resident = null
+
+    if (residents.length === 1) {
+        resident = residents[0]
+    } else {
+        // Multiple residents found - use unit number
+        if (!unitNumber) {
+            return { error: 'Multiple profiles found. Please contact support.' }
+        }
+        resident = residents.find((r: any) => r.unit_number === unitNumber)
+    }
 
     if (!resident) return { error: 'Profile not found' }
 

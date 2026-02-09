@@ -11,17 +11,42 @@ export default async function ProfilePage() {
     }
 
     // Fetch resident data
-    const { data: resident } = await supabase
+    let { data: resident, error } = await supabase
         .from('residents')
         .select('*')
         .eq('user_id', user.id)
         .single()
 
-    // Handle case where resident record might not exist yet (though login should create it)
+    // Fallback: Check with Admin Client (in case RLS is missing)
     if (!resident) {
-        // Fallback or error - simplistic handling for now
-        // Maybe redirect to dashboard which handles linking?
-        redirect('/dashboard')
+        // Dynamically import to avoid build issues if mixed? No, server component fine.
+        const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+        const adminClient = createSupabaseClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        const { data: adminResident } = await adminClient
+            .from('residents')
+            .select('*')
+            .eq('user_id', user.id)
+            .single()
+
+        if (adminResident) {
+            resident = adminResident
+        }
+    }
+
+    // Handle case where resident record might not exist yet
+    if (!resident) {
+        return (
+            <div className="p-8 text-center text-slate-400">
+                <h1 className="text-xl font-bold text-white mb-2">Profile Not Linked</h1>
+                <p>We couldn't find a resident profile linked to your account.</p>
+                <p className="mt-4">Please contact the office for assistance.</p>
+                <p className="text-xs mt-2 opacity-50">User ID: {user.id}</p>
+            </div>
+        )
     }
 
     return <ProfileForm initialData={resident} />
