@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
         const formData = await request.formData()
         const email = await parseSendGridRequest(formData)
 
-        // ... (Supabase Init)
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -28,7 +27,9 @@ export async function POST(request: NextRequest) {
                 const { error: uploadError } = await supabaseAdmin
                     .storage
                     .from('admin-uploads')
-                    .upload(path, attachment.content, {
+                    .upload({
+                        path,
+                        data: attachment.content,
                         contentType: 'application/pdf',
                         upsert: false
                     })
@@ -46,15 +47,18 @@ export async function POST(request: NextRequest) {
                 const text = await extractTextFromPDF(attachment.content)
                 const unitNumber = extractUnitNumber(text)
 
-                if (unitNumber) {
-                    unitFound = unitNumber
+                // Fallback: Check Filename if PDF text fails
+                const unitFromFilename = extractUnitNumber(attachment.filename)
+
+                const finalUnitNumber = unitNumber || unitFromFilename
+
+                if (finalUnitNumber) {
+                    unitFound = finalUnitNumber
                     // Find Resident by Unit Number
-                    // Note: 'residents' table MUST store unit_number consistent with extraction (e.g. '25', not 'RV025')
-                    // Or we assume the DB has '25' and we strip everything.
                     const { data: resident } = await supabaseAdmin
                         .from('residents')
                         .select('id')
-                        .eq('unit_number', unitNumber) // Ensure DB Unit Numbers are clean (e.g. '25')
+                        .eq('unit_number', finalUnitNumber)
                         .single()
 
                     if (resident) {
@@ -63,17 +67,19 @@ export async function POST(request: NextRequest) {
                         // Create Bill Record automatically
                         await supabaseAdmin.from('bills').insert({
                             resident_id: residentId,
-                            amount: 0, // TODO: Extract amount?
+                            amount: 0, // Default 0, admin updates later
                             description: `Imported Invoice: ${attachment.filename}`,
-                            month: new Date().toISOString(), // Default to current month
+                            month: new Date().toISOString(),
                             pdf_url: path,
-                            is_paid: false
+                            is_paid: false,
+                            uploaded_by_email: email.from // Useful for audit
                         })
                         billsCreated++
                     }
                 }
 
                 // Create generic Document Record
+                // Note: The fields here must match the schema exactly.
                 const { error: dbError } = await supabaseAdmin
                     .from('documents')
                     .insert({
@@ -82,11 +88,10 @@ export async function POST(request: NextRequest) {
                         content_type: attachment.contentType,
                         file_size: attachment.size,
                         source: 'email',
-                        sender_email: email.from,
-                        // Store metadata about parsing
                         metadata: {
                             unit_detected: unitFound,
-                            resident_linked: !!residentId
+                            resident_linked: !!residentId,
+                            sender: email.from
                         }
                     })
 
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            files: uploadedFiles.length,
+            files: uploadedFiles,
             bills_created: billsCreated
         })
 

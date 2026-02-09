@@ -83,9 +83,15 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
 export function extractUnitNumber(text: string): string | null {
     // Look for pattern: RV followed by optional zeros and 1-3 digits
     // e.g. RV025, RV25, RV001
-    const match = text.match(/RV0*(\d{1,3})/i);
+    // Also handle possible spaces: RV 025
+    const match = text.match(/RV\s*0*(\d{1,3})/i);
     if (match && match[1]) {
         return match[1];
     }
+
+    // Fallback: Check for "Unit X" pattern if RV is missing but common in invoice text
+    // const unitMatch = text.match(/Unit\s*0*(\d{1,3})/i);
+    // if (unitMatch && unitMatch[1]) return unitMatch[1];
+
     return null;
 }
