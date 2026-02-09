@@ -169,6 +169,11 @@ export default function LoginPage() {
                                 </p>
                             )}
                         </div>
+                        <div className="mt-4 text-sm text-slate-500">
+                            <Link href="/claim" className="hover:text-amber-600 transition-colors">
+                                Received an SMS invite? <strong>Claim your profile</strong>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
