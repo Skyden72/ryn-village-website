@@ -1,22 +1,43 @@
+import { createClient } from '@/lib/supabase/server'
 import { Users, Megaphone, Receipt, Wrench, TrendingUp, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
 
-// TODO: Fetch from Supabase
-const stats = {
-    totalResidents: 187,
-    activeAnnouncements: 5,
-    pendingBills: 12,
-    openRequests: 8,
-}
+export const dynamic = 'force-dynamic'
 
-const recentActivity = [
-    { type: 'request', message: 'New maintenance request from Unit A12', time: '5 min ago' },
-    { type: 'payment', message: 'Bill paid by Unit B7', time: '1 hour ago' },
-    { type: 'resident', message: 'New resident registered: Unit C15', time: '2 hours ago' },
-    { type: 'request', message: 'Request resolved: Plumbing issue Unit A8', time: '3 hours ago' },
-]
+export default async function AdminDashboardPage() {
+    const supabase = await createClient()
 
-export default function AdminDashboardPage() {
+    // Fetch stats in parallel
+    const [
+        { count: residentsCount },
+        { count: maintenanceCount },
+        { count: announcementsCount },
+        { count: openRequestsCount },
+        { data: recentActivity }
+    ] = await Promise.all([
+        supabase.from('residents').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('maintenance_requests').select('*', { count: 'exact', head: true }),
+        supabase.from('announcements').select('*', { count: 'exact', head: true }).eq('is_published', true),
+        supabase.from('maintenance_requests').select('*', { count: 'exact', head: true }).neq('status', 'resolved'),
+        // Fetch recent maintenance requests as "activity" for now
+        supabase.from('maintenance_requests')
+            .select(`
+                *,
+                residents (unit_number)
+            `)
+            .order('created_at', { ascending: false })
+            .limit(5)
+    ])
+
+    const stats = {
+        totalResidents: residentsCount || 0,
+        activeAnnouncements: announcementsCount || 0,
+        openRequests: openRequestsCount || 0,
+        // Bills not implemented yet in this fetch, placeholder
+        pendingBills: 0,
+    }
+
     return (
         <div className="max-w-6xl mx-auto">
             {/* Header */}
@@ -84,20 +105,26 @@ export default function AdminDashboardPage() {
             {/* Recent Activity */}
             <div className="bg-slate-800 rounded-xl border border-slate-700">
                 <div className="p-6 border-b border-slate-700">
-                    <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+                    <h2 className="text-lg font-semibold text-white">Recent Maintenance Activity</h2>
                 </div>
                 <div className="divide-y divide-slate-700">
-                    {recentActivity.map((activity, index) => (
-                        <div key={index} className="p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full ${activity.type === 'request' ? 'bg-purple-400' :
-                                        activity.type === 'payment' ? 'bg-emerald-400' : 'bg-blue-400'
-                                    }`} />
-                                <p className="text-slate-300">{activity.message}</p>
+                    {(!recentActivity || recentActivity.length === 0) ? (
+                        <div className="p-6 text-slate-400 text-center">No recent activity</div>
+                    ) : (
+                        recentActivity.map((activity: any) => (
+                            <div key={activity.id} className="p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-purple-400" />
+                                    <p className="text-slate-300">
+                                        <span className="font-medium text-white">New Request:</span> {activity.title} ({activity.residents?.unit_number || 'Unknown'})
+                                    </p>
+                                </div>
+                                <span className="text-xs text-slate-500">
+                                    {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                                </span>
                             </div>
-                            <span className="text-xs text-slate-500">{activity.time}</span>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             </div>
         </div>

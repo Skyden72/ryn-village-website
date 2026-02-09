@@ -56,7 +56,7 @@ export async function submitMaintenanceRequest(formData: FormData) {
             if (fallback) {
                 resident = fallback
                 // Auto-link
-                await adminClient.from('residents').update({ user_id: user.id }).eq('id', resident.id)
+                await adminClient.from('residents').update({ user_id: user.id }).eq('id', fallback.id)
             }
         }
     }
