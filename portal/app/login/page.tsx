@@ -17,7 +17,7 @@ export default function LoginPage() {
         setError(null)
 
         try {
-            const action = view === 'login' ? login : signup
+            const action = login
             const result = await action(formData)
 
             if (result?.error) {
@@ -74,12 +74,10 @@ export default function LoginPage() {
 
                     <div className="mb-10">
                         <h1 className="text-3xl font-serif font-bold text-slate-900 mb-2">
-                            {view === 'login' ? 'Resident Login' : 'Create Account'}
+                            Resident Login
                         </h1>
                         <p className="text-slate-600">
-                            {view === 'login'
-                                ? 'Enter your details to access your portal'
-                                : 'Sign up for a new resident account'}
+                            Enter your details to access your portal
                         </p>
                     </div>
 
@@ -137,7 +135,7 @@ export default function LoginPage() {
                                     <span>Processing...</span>
                                 </>
                             ) : (
-                                <span>{view === 'login' ? 'Sign In' : 'Create Account'}</span>
+                                <span>Sign In</span>
                             )}
                         </button>
                     </form>
@@ -145,29 +143,7 @@ export default function LoginPage() {
                     {/* Footer */}
                     <div className="mt-8 text-center sm:text-left">
                         <div className="text-sm text-slate-600">
-                            {view === 'login' ? (
-                                <p>
-                                    Don't have an account?{' '}
-                                    <button
-                                        type="button"
-                                        onClick={() => setView('signup')}
-                                        className="text-amber-600 hover:text-amber-700 font-medium"
-                                    >
-                                        Sign up
-                                    </button>
-                                </p>
-                            ) : (
-                                <p>
-                                    Already have an account?{' '}
-                                    <button
-                                        type="button"
-                                        onClick={() => setView('login')}
-                                        className="text-amber-600 hover:text-amber-700 font-medium"
-                                    >
-                                        Sign in
-                                    </button>
-                                </p>
-                            )}
+                            Please contact the office if you don't have an account.
                         </div>
                         <div className="mt-4 text-sm text-slate-500">
                             <Link href="/claim" className="hover:text-amber-600 transition-colors">
