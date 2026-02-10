@@ -26,7 +26,7 @@ export async function submitMaintenanceRequest(formData: FormData) {
         .from('residents')
         .select('id, unit_number, full_name')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
     if (!resident) {
         // Fallback to Admin Client
@@ -41,7 +41,7 @@ export async function submitMaintenanceRequest(formData: FormData) {
             .from('residents')
             .select('id, unit_number, full_name')
             .eq('user_id', user.id)
-            .single()
+            .maybeSingle()
 
         if (adminResident) {
             resident = adminResident
@@ -51,7 +51,7 @@ export async function submitMaintenanceRequest(formData: FormData) {
                 .from('residents')
                 .select('id, unit_number, full_name')
                 .eq('email', user.email)
-                .single()
+                .maybeSingle()
 
             if (fallback) {
                 resident = fallback

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import {
     LayoutDashboard,
     Users,
+    Users2,
     Megaphone,
     Receipt,
     Wrench,
@@ -17,6 +18,7 @@ import {
     Upload
 } from 'lucide-react'
 import { useState } from 'react'
+import { useAdminRole } from './AdminRoleContext'
 
 const navItems = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -31,6 +33,12 @@ export default function AdminSidebar() {
     const pathname = usePathname()
     const router = useRouter()
     const [mobileOpen, setMobileOpen] = useState(false)
+    const { isSuperAdmin, name, role } = useAdminRole()
+
+    const allNavItems = [
+        ...navItems,
+        ...(isSuperAdmin ? [{ label: 'Team', href: '/admin/team', icon: Users2 }] : []),
+    ]
 
     const handleLogout = async () => {
         const supabase = createClient()
@@ -53,7 +61,7 @@ export default function AdminSidebar() {
 
             {/* Navigation Links */}
             <nav className="flex-1 p-4 space-y-1">
-                {navItems.map((item) => {
+                {allNavItems.map((item) => {
                     const isActive = pathname === item.href ||
                         (item.href !== '/admin' && pathname.startsWith(item.href))
                     const Icon = item.icon
@@ -74,8 +82,17 @@ export default function AdminSidebar() {
                 })}
             </nav>
 
-            {/* Back to Portal + Logout */}
+            {/* Admin Info + Back to Portal + Logout */}
             <div className="p-4 border-t border-slate-700 space-y-2">
+                <div className="px-4 py-2 mb-1">
+                    <p className="text-sm font-medium text-white truncate">{name}</p>
+                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${role === 'super_admin'
+                            ? 'bg-amber-500/20 text-amber-400'
+                            : 'bg-slate-600/50 text-slate-300'
+                        }`}>
+                        {role === 'super_admin' ? 'Super Admin' : 'Staff'}
+                    </span>
+                </div>
                 <Link
                     href="/dashboard"
                     className="flex items-center gap-3 px-4 py-3 w-full text-slate-300 hover:bg-slate-700 rounded-lg transition-all"

@@ -20,7 +20,7 @@ export default async function MaintenancePage() {
         .from('residents')
         .select('id')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
     if (!resident) {
         const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
@@ -33,7 +33,7 @@ export default async function MaintenancePage() {
             .from('residents')
             .select('id')
             .eq('user_id', user.id)
-            .single()
+            .maybeSingle()
 
         resident = adminResident
     }
@@ -42,28 +42,23 @@ export default async function MaintenancePage() {
     let requests: any[] = []
 
     if (resident) {
-        const { data, error } = await supabase
+        // Use Admin Client to bypass RLS policies that might be hiding requests
+        const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+        const adminClient = createSupabaseClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        const { data: adminRequests, error } = await adminClient
             .from('maintenance_requests')
             .select('*')
             .eq('resident_id', resident.id)
             .order('created_at', { ascending: false })
 
-        if (data) {
-            requests = data
+        if (adminRequests) {
+            requests = adminRequests
         } else if (error) {
-            // Try Admin Client if RLS blocks read
-            const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
-            const adminClient = createSupabaseClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.SUPABASE_SERVICE_ROLE_KEY!
-            )
-            const { data: adminRequests } = await adminClient
-                .from('maintenance_requests')
-                .select('*')
-                .eq('resident_id', resident.id)
-                .order('created_at', { ascending: false })
-
-            if (adminRequests) requests = adminRequests
+            console.error('Error fetching requests:', error)
         }
     }
 

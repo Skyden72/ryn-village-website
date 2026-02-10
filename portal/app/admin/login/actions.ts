@@ -49,7 +49,7 @@ export async function adminLogin(formData: FormData) {
         .from('admins')
         .select('id, role')
         .eq('id', data.user.id)
-        .single()
+        .maybeSingle()
 
     if (!adminRecord) {
         // Not an admin - sign them out immediately

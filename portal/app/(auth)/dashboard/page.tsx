@@ -15,7 +15,7 @@ export default async function DashboardPage() {
         .from('residents')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
     // Fallback: Check with Admin Client (RLS bypass)
     if (!resident) {
@@ -30,7 +30,7 @@ export default async function DashboardPage() {
             .from('residents')
             .select('*')
             .eq('user_id', user.id)
-            .single()
+            .maybeSingle()
 
         if (adminResident) {
             resident = adminResident
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
                 .from('residents')
                 .select('*')
                 .eq('email', user.email)
-                .single()
+                .maybeSingle()
 
             if (fallback) {
                 resident = fallback

@@ -15,7 +15,7 @@ export default async function ProfilePage() {
         .from('residents')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
     // Fallback: Check with Admin Client (in case RLS is missing)
     if (!resident) {
@@ -30,7 +30,7 @@ export default async function ProfilePage() {
             .from('residents')
             .select('*')
             .eq('user_id', user.id)
-            .single()
+            .maybeSingle()
 
         if (adminResident) {
             resident = adminResident

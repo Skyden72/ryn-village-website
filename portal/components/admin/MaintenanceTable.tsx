@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Wrench, Clock, CheckCircle, AlertCircle, User, Home } from 'lucide-react'
 import { format } from 'date-fns'
+import { updateRequestStatus } from '@/app/(admin)/admin/maintenance/actions'
 
 type Request = {
     id: string
@@ -126,18 +127,35 @@ export default function MaintenanceTable({ requests }: { requests: Request[] }) 
                             {/* Actions */}
                             <div className="flex items-center gap-2 ml-14">
                                 {request.status === 'pending' && (
-                                    <button className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors">
+                                    <button
+                                        onClick={async () => {
+                                            if (confirm('Start working on this request?')) {
+                                                await updateRequestStatus(request.id, 'in_progress')
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                    >
                                         Start Work
                                     </button>
                                 )}
                                 {request.status === 'in_progress' && (
-                                    <button className="px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg transition-colors">
+                                    <button
+                                        onClick={async () => {
+                                            if (confirm('Mark this request as resolved?')) {
+                                                await updateRequestStatus(request.id, 'resolved')
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                                    >
                                         Mark Resolved
                                     </button>
                                 )}
-                                <button className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-slate-700 rounded-lg transition-colors">
+                                <a
+                                    href={`/admin/maintenance/${request.id}`}
+                                    className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-slate-700 rounded-lg transition-colors"
+                                >
                                     View Details
-                                </button>
+                                </a>
                             </div>
                         </div>
                     )

@@ -74,7 +74,7 @@ export async function signup(formData: FormData) {
             .from('residents')
             .select('id')
             .eq('email', email)
-            .single()
+            .maybeSingle()
 
         if (existing) {
             // Link existing record

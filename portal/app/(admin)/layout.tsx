@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import AdminSidebar from '@/components/AdminSidebar'
+import { AdminRoleProvider } from '@/components/AdminRoleContext'
 
 async function getAdminUser() {
     const cookieStore = await cookies()
@@ -37,7 +38,7 @@ async function getAdminUser() {
         .from('admins')
         .select('id, name, role')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
     return adminRecord
 }
@@ -54,16 +55,17 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-slate-900">
-            <AdminSidebar />
-            {/* Main content area */}
-            {/* Main content area */}
-            <main className="lg:ml-64 pt-16 lg:pt-8 min-h-screen">
-                <div className="p-6 lg:p-10">
-                    {children}
-                </div>
-            </main>
-        </div>
+        <AdminRoleProvider role={admin.role} name={admin.name}>
+            <div className="min-h-screen bg-slate-900">
+                <AdminSidebar />
+                {/* Main content area */}
+                <main className="lg:ml-64 pt-16 lg:pt-8 min-h-screen">
+                    <div className="p-6 lg:p-10">
+                        {children}
+                    </div>
+                </main>
+            </div>
+        </AdminRoleProvider>
     )
 }
 

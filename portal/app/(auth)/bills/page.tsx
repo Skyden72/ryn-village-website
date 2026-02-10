@@ -13,7 +13,7 @@ export default async function BillsPage() {
         .from('residents')
         .select('id')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
     // 2. Fetch Bills
     const { data: bills, error } = await supabase
